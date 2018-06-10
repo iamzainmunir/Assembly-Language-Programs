@@ -1,0 +1,154 @@
+.MODEL SMALL
+.STACK 100h
+.386
+.DATA
+STR1 DB "Enter your value to search:$"
+ARRAY byte 1,2,3,4,5,10
+STR3 DB "Found !$"
+STR4 DB "Not Found !$"
+FIRST dw 0
+LAST dw 0
+MID dw ?
+DIVIDER byte 2
+.CODE
+ MAIN PROC
+  MOV AX,@DATA
+  MOV DS,AX
+  MOV CX,lengthof ARRAY
+  MOV AH,9 
+  MOV DX,OFFSET STR1
+  INT 21h
+  MOV BX,CX
+  DEC BX
+  MOV LAST,BX
+  MOV MID,3
+  CALL INDEC
+SEARCH:
+  MOV SI,MID
+  MOV BL,ARRAY[SI]
+  CMP AL,BL
+  JG RIGHTSHIFT 
+  JL LEFTSHIFT
+  JE FOUND
+RIGHTSHIFT:
+   MOV DX,MID  
+   INC DX
+   MOV FIRST,DX
+   MOV CX,LAST 
+   CMP DX,CX
+   JG NOTFOUND
+   JMP DIVISOR
+LEFTSHIFT:
+   MOV DX,MID  
+   DEC DX
+   MOV LAST,DX
+   MOV CX,FIRST
+   CMP CX,DX
+   JG NOTFOUND
+DIVISOR:
+   MOV CX,FIRST
+   MOV DX,LAST
+   ADD DX,CX
+   PUSH AX
+   MOV AX,DX
+   DIV DIVIDER
+   MOV AH,0
+   MOV MID,AX
+   POP AX
+   JMP SEARCH
+     
+FOUND:
+  MOV AH,9
+  MOV DX,OFFSET STR3
+  INT 21h
+  JMP CLOSE
+NOTFOUND:
+  MOV AH,9
+  MOV DX,OFFSET STR4
+  INT 21h
+
+CLOSE:
+  MOV AH,4ch
+  INT 21h
+MAIN ENDP
+
+
+
+INDEC PROC
+  PUSH BX
+  PUSH CX
+  PUSH DX
+  
+  BEGIN:
+  MOV CX,0
+  MOV BX,0
+  
+  
+  
+  MOV AH,1
+  INT 21h
+  
+  CMP AL,'-'
+  JE MINUS
+  CMP AL,'+'
+  JE PLUS
+  JMP @LOOP
+  
+  MINUS:
+  MOV CX,1
+  
+  PLUS:
+  INT 21h
+  
+  @LOOP:
+  
+  CMP AL,'0'
+  JL INVALID
+  CMP AL,'9'
+  JG INVALID
+  
+  SUB AL,48
+  MOV AH,0
+  PUSH AX
+  MOV AX,10
+  MUL BX
+  POP BX
+  ADD BX,AX
+  
+  MOV AH,1
+  INT 21h
+  
+  CMP AL,13
+  JNE @LOOP
+  
+  MOV AX,BX
+  CMP CX,0
+  JE EXIT
+  
+  NEG AX
+  
+  EXIT:
+  POP DX
+  POP CX
+  POP BX
+  
+  RET
+  
+  INVALID:
+  MOV AH,2
+  MOV DL,10
+  INT 21h
+  MOV DL,13
+  INT 21h
+  JMP BEGIN
+  
+  INDEC ENDP
+
+
+
+
+
+
+END MAIN
+
+
